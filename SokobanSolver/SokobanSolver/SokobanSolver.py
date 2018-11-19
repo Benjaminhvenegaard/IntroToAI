@@ -24,6 +24,69 @@ class Node:
     def hasAllChildren(self):
         return (self.left and self.right and self.down and self.up)
 
+    def createChildren(self):
+        if self.isLeaf():
+            temp = Node(getNameForNode(),LEFT,[],self.nBox,self.nGoal,self)
+            illegal,isGoal,boxPush = isIllegalMove(self.coord,LEFT)
+            if not illegal:
+                temp.coord = self.coord[:]
+                if isGoal:    
+                    temp.nGoal +=1
+                if boxPush:
+                    if sokobanMap[temp.coord[0]][temp.coord[1]-1] == GOAL:
+                        temp.nGoal -= 1
+
+                self.left = temp
+                Openlist.append(temp)
+            else:
+                self.left = DEAD
+
+            temp = Node(getNameForNode(),DOWN,[],None,self.nGoal,self)
+            illegal,isGoal,boxPush = isIllegalMove(self.coord,DOWN)
+            if not illegal:
+                temp.coord = self.coord[:]
+                if isGoal:    
+                    temp.nGoal +=1
+                if boxPush:
+                    if sokobanMap[temp.coord[0]+1][temp.coord[1]] == GOAL:
+                        temp.nGoal -= 1
+
+                self.down = temp
+                Openlist.append(temp)
+            else:
+                self.down = DEAD
+
+            temp = Node(getNameForNode(),RIGHT,[],None,self.nGoal,self)
+            illegal,isGoal,boxPush = isIllegalMove(self.coord,RIGHT)
+            if not illegal:
+                temp.coord = self.coord[:]
+                if isGoal:    
+                    temp.nGoal +=1
+                if boxPush:
+                    if sokobanMap[temp.coord[0]][temp.coord[1]+1] == GOAL:
+                        temp.nGoal -= 1
+
+                self.right = temp
+                Openlist.append(temp)
+            else:
+                self.right = DEAD
+
+            temp = Node(getNameForNode(),UP,[],None,self.nGoal,self)
+            illegal,isGoal,boxPush = isIllegalMove(self.coord,UP)
+            if not illegal:
+                temp.coord = self.coord[:]
+                if isGoal:    
+                    temp.nGoal +=1
+                if boxPush:
+                    if sokobanMap[temp.coord[0]-1][temp.coord[1]] == GOAL:
+                        temp.nGoal -= 1
+
+                self.up = temp
+                Openlist.append(temp)
+            else:
+                self.up = DEAD
+
+
 
 class Tree:
      def __init__(self):
@@ -42,14 +105,55 @@ class Tree:
 
 Openlist=[]
 ClosedList = []
+GoalList = []
+BoxList = []
 
+initMap = []
 sokobanMap = []
 
-iterator = 0
 
 
-# ----- Functions -------------------------------------------------------------------------
+iterator = 1
 
+
+
+WALL = '#'
+GOAL = 'G'
+PLAYER = 'M'
+DIAMOND = 'J'
+FLOOR = '.'
+NOTHING = ' '
+
+UP  = 'u'
+LEFT = 'l'
+DOWN = 'd'
+RIGHT = 'r'
+
+DEAD = 0
+
+
+hashTable = {} # Hashtable for holding the sorted positions of boxes
+
+
+# Should implement a solution list instead of only the sokoban map
+
+
+
+# ----- Hash functions -------------------------------------------------------------------------
+
+def hashing(listoflist):
+    hashval = 0
+    for i in listoflist:
+        for j in i:
+            hashval = hashval * 53 + j
+
+    return hashval
+
+def insertInHashtable(hashtable, listoflists, key):
+    if not hashtable.get(key, 0):
+        hashtable[key] = listoflists
+    else:
+        print('overwrite', listoflists, key)
 
 
 # ----- Map functions -----
@@ -74,66 +178,96 @@ def visualizeMap():
     print("\n")
 
 
-
-
-# ----- Tree structure functions -----
-
+def visualizeMap2():
+    for i in sokobanMap:
+        print(i)
 
 
 
 # ----- Random functions -----
+def li():
+    print('--------------------------------------------------------')
+
+
+
+def sortCoord(listoflists): 
+    #It will first sort on the y value and if that's equal then it will sort on the x value. 
+    #I would also advise to not use list as a variable because it is a built-in data structure.
+    temp = sorted(listoflists , key=lambda k: [k[5], k[1]])
+    return temp
+
 
 def getNameForNode():
-    iterator++
+    global iterator
+    iterator+=1
     return iterator-1
 
 
-def isIllegalMove(x , y,dir):
-    if dir == 'u':
-        if sokobanMap[x][y -1] == 'D':
-            if sokobanMap[x][y -2] == '.':
-                return false
+def isIllegalMove(coord, dir): # Returns two variables: first being illegal move, Second being whether the diamond is placed on a goal
+    # This function takes the current map as a reference for box positions but this should be changed to the list with box coordinates
+    x = coord[0]
+    y = coord[1]
+    if dir == LEFT:
+        if sokobanMap[x][y -1] == DIAMOND:
+            if sokobanMap[x][y -2] == FLOOR:
+                if sokobanMap[x][y -2] == GOAL:
+                    return False,True, True               #Returns legal 
+                else:
+                    return False, False,True
             else: 
-                return true
+                return True,False, True
         else:
-            if sokobanMap[x][y -1] == '.':
-                return false
+            if sokobanMap[x][y -1] == FLOOR:
+                return False, False, False
             else:
-                return true
-    elif dir == 'l':
-        if sokobanMap[x-1][y ] == 'D':
-            if sokobanMap[x-2][y ] == '.':
-                return false
+                return True,False,False
+    elif dir == UP:
+        if sokobanMap[x-1][y ] == DIAMOND:
+            if sokobanMap[x-2][y ] == FLOOR:
+                if sokobanMap[x-2][y ] == GOAL:
+                    return False,True, True               #Returns legal 
+                else:
+                    return False, False,True
             else: 
-                return true
+                return True,False, True
         else:
-            if sokobanMap[x-1][y ] == '.':
-                return false
+            if sokobanMap[x-1][y ] == FLOOR:
+                return False, False, False
             else:
-                return true
-    elif dir == 'd':
-        if sokobanMap[x][y +1] == 'D':
-            if sokobanMap[x][y +2] == '.':
-                return false
+                return True,False,False
+    elif dir == RIGHT:
+        if sokobanMap[x][y +1] == DIAMOND:
+            if sokobanMap[x][y +2] == FLOOR:
+                if sokobanMap[x][y+2 ] == GOAL:
+                    return False,True, True               #Returns legal 
+                else:
+                    return False, False,True
             else: 
-                return true
+                return True,False, True
         else:
-            if sokobanMap[x][y +1] == '.':
-                return false
+            if sokobanMap[x][y +1] == FLOOR:
+                return False, False, False
             else:
-                return true
-    elif dir == 'r':
-        if sokobanMap[x+1][y ] == 'D':
-            if sokobanMap[x+2][y ] == '.':
-                return false
+                return True,False,False
+    elif dir == DOWN:
+        if sokobanMap[x+1][y] == DIAMOND:
+            if sokobanMap[x+2][y] == FLOOR:
+                if sokobanMap[x+2][y ] == GOAL:
+                    return False,True, True               #Returns legal 
+                else:
+                    return False, False,True
             else: 
-                return true
+                return True,False, True
         else:
-            if sokobanMap[x+1][y ] == '.':
-                return false
+            if sokobanMap[x+1][y] == FLOOR:
+                return False, False, False
             else:
-                return true
+                return True,False,False
 
+
+
+
+#def solveSokoban():
 
 #def insert(self,data):
 #    if self.data:
@@ -177,14 +311,6 @@ def isIllegalMove(x , y,dir):
 #        if self.right:
 #            self.right.PrintTree()
 
-
-
-
-
-
-
-
-
 #def move(direction):
     #if direction == "u" or direction == "U":
         
@@ -199,6 +325,25 @@ print(len(sokobanMap[0]))
 print(len(sokobanMap[1]))
 print(len(sokobanMap[4]))
 visualizeMap()
+print('visualizeMap2')
+visualizeMap2()
+
+
+
+for i in range(len(sokobanMap)):
+    for j in range(len(sokobanMap[i])):
+        if sokobanMap[i][j] == GOAL:
+            GoalList.append(sokobanMap[i][j])
+        if sokobanMap[i][j] == DIAMOND:
+            BoxList.append(sokobanMap[i][j])
+
+for i in range(len(sokobanMap)):
+    for j in range(len(sokobanMap[i])):
+        if sokobanMap[i][j] == PLAYER or sokobanMap[i][j] == DIAMOND:
+            
+
+
+
 
 
 print(".",sokobanMap[0][1],".")
@@ -208,36 +353,41 @@ print(sokobanMap[4][0],sokobanMap[4][1],sokobanMap[4][2],end="")
 
 print(sokobanMap[4][3])
 
-root = Node(getNameForNode(),'init',[0,1],1,0)
-iterator++
-#if root.left == None:
-#    temp = Node(root.name+1,'l',)
-#    Openlist.append(Node(root.name+1,'l',))
+root = Node(getNameForNode(),'init',[1,1],1,0)
 
 mytree = Tree()
 
 mytree = root
 Openlist.append(root)
-print(mytree.coord)
+#print(mytree.coord)
 
-print('is leaf', root.isLeaf())
-print('left', mytree.left)
-print('up',mytree.up)
-print('down', mytree.down)
-print('right', mytree.right)
+#print('is leaf', root.isLeaf())
+#print('left', mytree.left)
+#print('up',mytree.up)
+#print('down', mytree.down)
+#print('right', mytree.right)
 
 
-print(mytree.parent)
+#print(mytree.parent)
+#for i in Openlist:
+#    print(Openlist[i.name])
+
+    
+#print('node has all children', root.hasAllChildren())
+
+
+li()
+
+print(root.isLeaf())
+
+print(isIllegalMove(root.coord,LEFT))
+
+print(Openlist)
+
+root.createChildren()
+
+print(len(Openlist))
+
 for i in Openlist:
-    print(Openlist[i.name])
-
-    root.left = Node(getNameForNode,'l',)
-print('node has all children', root.hasAllChildren())
-
-
-
-
-
-
-
-
+    print(i.name)
+    

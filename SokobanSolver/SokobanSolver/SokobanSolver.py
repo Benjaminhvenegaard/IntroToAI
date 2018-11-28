@@ -74,6 +74,9 @@ class Node:
     def getCoord(self):
         return self.coord
 
+    def getboxList(self):
+        return self.boxCoord
+
 
 
 
@@ -84,8 +87,10 @@ class Node:
         global resultString
 
         if self.isLeaf():
-            
-            temp = Node(getNameForNode(),LEFT,[None,None],self.boxCoord,self.nGoal,self)
+            temp = Node(getNameForNode(),LEFT,[None,None],None,self.nGoal,self)
+            parentBoxCoordinate = self.getboxList().copy()
+            temp.boxCoord = parentBoxCoordinate
+
             illegal,isGoal,boxPush = isIllegalMove(self.coord,LEFT,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -107,6 +112,7 @@ class Node:
                 inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                 if inserted:
                     Openlist.append(temp)
+                    print(tempListState)
                 if temp.nGoal == len(BoxList):
                     GOALREACHED = True
                     GOALID = temp.name
@@ -115,7 +121,7 @@ class Node:
             else:
                 self.left = DEAD
 
-            temp = Node(getNameForNode(),DOWN,[None,None],self.boxCoord,self.nGoal,self)
+            temp = Node(getNameForNode(),DOWN,[None,None],parentBoxCoordinate,self.nGoal,self)
             illegal,isGoal,boxPush = isIllegalMove(self.coord,DOWN,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -137,6 +143,7 @@ class Node:
                 inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                 if inserted:
                     Openlist.append(temp)
+                    print(tempListState)
                 if temp.nGoal == len(BoxList):
                     GOALREACHED = True
                     GOALID = temp.name
@@ -145,7 +152,7 @@ class Node:
             else:
                 self.down = DEAD
 
-            temp = Node(getNameForNode(),RIGHT,[None,None],self.boxCoord,self.nGoal,self)
+            temp = Node(getNameForNode(),RIGHT,[None,None],parentBoxCoordinate,self.nGoal,self)
             illegal,isGoal,boxPush = isIllegalMove(self.coord,RIGHT,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -166,6 +173,7 @@ class Node:
                 inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                 if inserted:
                     Openlist.append(temp)
+                    print(tempListState)
                 if temp.nGoal == len(BoxList):
                     GOALREACHED = True
                     GOALID = temp.name
@@ -174,7 +182,7 @@ class Node:
             else:
                 self.right = DEAD
 
-            temp = Node(getNameForNode(),UP,[None,None],self.boxCoord,self.nGoal,self)
+            temp = Node(getNameForNode(),UP,[None,None],parentBoxCoordinate,self.nGoal,self)
             illegal,isGoal,boxPush = isIllegalMove(self.coord,UP,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -194,7 +202,7 @@ class Node:
                 inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                 if inserted:
                     Openlist.append(temp)
-
+                    print(tempListState)
                 if temp.nGoal == len(BoxList):
                     GOALREACHED = True
                     GOALID = temp.name
@@ -235,7 +243,7 @@ def insertInHashtable(hashtable, listoflists, key):
         hashtable[key] = listoflists
         return True
     else:
-        print('overwrite', listoflists, key)
+        #print('overwrite', listoflists, key)
         return False
 
 
@@ -426,7 +434,9 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
     if ([x + dx,y + dy]) in boxList:
         if sokobanMap[x + (2 * dx)][y + (2 * dy)] == GOAL:
             return False, True, True               #Returns legal 
-        elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == FLOOR and sokobanMap[x + (2 * dx)][y + (2 * dy)] in eligibleCoordList:
+        elif ([x + (2 * dx) , y + (2 * dy)]) in boxList:
+            return True, False, True
+        elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == FLOOR:# and sokobanMap[x + (2 * dx)][y + (2 * dy)] in eligibleCoordList:
             return False, False,True
         else: 
             return True, None, None
@@ -439,7 +449,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-readMap("testMap2")   # Read the competition map
+readMap("testMap")   # Read the competition map
 print("\n")
 
 sokobanMap = initMap[:][:]
@@ -519,7 +529,8 @@ while len(Openlist):
     
 li()
 print('done solving hashTable:')
-print(hashTable)
+#print(hashTable)
+
 
 li()
 print('output string' , resultString[::-1])

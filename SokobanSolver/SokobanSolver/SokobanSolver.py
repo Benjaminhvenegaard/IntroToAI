@@ -236,7 +236,7 @@ class Node:
         global resultString
 
         if self.isLeaf():
-            for i in range(0,3):
+            for i in range(0,4):
                 if i == 0:
                     ddx = 0
                     ddy = -1
@@ -259,16 +259,15 @@ class Node:
                 tempBoxCoordinate = [x[:] for x in self.getboxList()]
                 
 
-                illegal,isGoal,boxPush = isIllegalMove(self.coord,LEFT,self.boxCoord)
+                illegal,isGoal,boxPush = isIllegalMove(self.coord,direc,self.boxCoord)
                 if not illegal:
                     tempCoordList = list(self.getCoord().copy())
                     temp.coord[0] = tempCoordList[0] + ddx
                     temp.coord[1] = tempCoordList[1] + ddy
-                
+                    temp.boxCoord = tempBoxCoordinate[:]
                     if isGoal:    
                         temp.nGoal +=1
                     if boxPush:
-                        temp.boxCoord = tempBoxCoordinate[:]
                         if temp.coord in tempBoxCoordinate:
                             indexOfBox = tempBoxCoordinate.index(temp.coord)
                             temp.boxCoord[indexOfBox][0] = temp.boxCoord[indexOfBox][0] + ddx
@@ -328,7 +327,7 @@ def hashing(listoflist):
     hashval = 0
     for i in listoflist:
         for j in i:
-            hashval = hashval * 53 + j
+            hashval = hashval * 71 + j
 
     return hashval
 
@@ -535,7 +534,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
         else: 
             return True, None, None
     else:
-        if sokobanMap[x + dx][y + dy] == FLOOR:
+        if sokobanMap[x + dx][y + dy] == FLOOR or sokobanMap[x + dx][y + dy] == GOAL:
             return False, False, False
         else:
             return True, None, None
@@ -543,7 +542,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-readMap("testMap")   # Read the competition map
+readMap("testMap2")   # Read the competition map
 print("\n")
 
 sokobanMap = initMap[:][:]
@@ -611,12 +610,14 @@ li()
 print('begin solving')
 while len(Openlist):
     Openlist[0].createChildren2()
-    print(Openlist[0].name)
+    print(Openlist[0].name, len(Openlist))
     if GOALREACHED:
         print('Done - GOAL REACHED')
         print('path')
         #while:
         break
+    else:
+        print('Goal not reached')
     Openlist.pop(0)
     
 
@@ -630,6 +631,9 @@ print('done solving hashTable:')
 li()
 print('output string' , resultString[::-1])
 
+li()
+print('nummer 28' , hashing([[3,3],[2,3],[3,2]]))
+print('nummer 82' , hashing([[3,3],[2,3],[2,3]]))
 
 
 

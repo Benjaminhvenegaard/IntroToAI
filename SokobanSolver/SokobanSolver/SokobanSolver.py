@@ -1,5 +1,6 @@
 print("Begin program")
 
+import copy
 # ----- Variables and lists -----------------------------------------------------------------------
 
 Openlist=[]
@@ -58,9 +59,9 @@ class Node:
 
     def isRoot(self):
         if self.parent == None:
-            return False
-        else:
             return not self.parent
+        else:
+            return False
 
     def isLeaf(self):
         return not ( self.left or self.right or self.down or self.up)
@@ -78,18 +79,17 @@ class Node:
         return self.boxCoord
 
 
-
-
-
     def createChildren(self):
         global GOALREACHED
         global GOALID
         global resultString
 
         if self.isLeaf():
-            temp = Node(getNameForNode(),LEFT,[None,None],None,self.nGoal,self)
+            temp = Node(getNameForNode(),LEFT,[None,None],[],self.nGoal,self)
+
             parentBoxCoordinate = self.getboxList().copy()
-            temp.boxCoord = parentBoxCoordinate
+
+            temp.boxCoord = parentBoxCoordinate.copy()
 
             illegal,isGoal,boxPush = isIllegalMove(self.coord,LEFT,self.boxCoord)
             if not illegal:
@@ -121,7 +121,14 @@ class Node:
             else:
                 self.left = DEAD
 
-            temp = Node(getNameForNode(),DOWN,[None,None],parentBoxCoordinate,self.nGoal,self)
+            temp = Node(getNameForNode(),DOWN,[None,None],[],self.nGoal,self)
+
+            
+            parentBoxCoordinate = self.getboxList().copy()
+
+            temp.boxCoord = parentBoxCoordinate.copy()
+
+            temp.boxCoord = parentBoxCoordinate
             illegal,isGoal,boxPush = isIllegalMove(self.coord,DOWN,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -152,7 +159,12 @@ class Node:
             else:
                 self.down = DEAD
 
-            temp = Node(getNameForNode(),RIGHT,[None,None],parentBoxCoordinate,self.nGoal,self)
+            temp = Node(getNameForNode(),RIGHT,[None,None],[],self.nGoal,self)
+
+            parentBoxCoordinate = self.getboxList().copy()
+
+            temp.boxCoord = parentBoxCoordinate.copy()
+            
             illegal,isGoal,boxPush = isIllegalMove(self.coord,RIGHT,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -182,7 +194,11 @@ class Node:
             else:
                 self.right = DEAD
 
-            temp = Node(getNameForNode(),UP,[None,None],parentBoxCoordinate,self.nGoal,self)
+            temp = Node(getNameForNode(),UP,[None,None],[],self.nGoal,self)
+
+            parentBoxCoordinate = self.getboxList().copy()
+
+            temp.boxCoord = parentBoxCoordinate.copy()
             illegal,isGoal,boxPush = isIllegalMove(self.coord,UP,self.boxCoord)
             if not illegal:
                 tempCoordList = self.getCoord().copy()
@@ -212,6 +228,84 @@ class Node:
 
 
     
+
+
+    def createChildren2(self):
+        global GOALREACHED
+        global GOALID
+        global resultString
+
+        if self.isLeaf():
+            for i in range(0,3):
+                if i == 0:
+                    ddx = 0
+                    ddy = -1
+                    direc = LEFT
+                elif i == 1:
+                    ddx = +1
+                    ddy = 0
+                    direc = DOWN
+                elif i == 2:
+                    ddx = 0
+                    ddy = +1
+                    direc = RIGHT
+                elif i == 3:
+                    ddx = -1
+                    ddy = 0
+                    direc = UP
+                temp = Node(getNameForNode(),direc,[None,None],[None],self.nGoal,self)
+
+                tempBoxCoordinate = list(self.getboxList().copy())
+                tempBoxCoordinate = [x[:] for x in self.getboxList()]
+                
+
+                illegal,isGoal,boxPush = isIllegalMove(self.coord,LEFT,self.boxCoord)
+                if not illegal:
+                    tempCoordList = list(self.getCoord().copy())
+                    temp.coord[0] = tempCoordList[0] + ddx
+                    temp.coord[1] = tempCoordList[1] + ddy
+                
+                    if isGoal:    
+                        temp.nGoal +=1
+                    if boxPush:
+                        temp.boxCoord = tempBoxCoordinate[:]
+                        if temp.coord in tempBoxCoordinate:
+                            indexOfBox = tempBoxCoordinate.index(temp.coord)
+                            temp.boxCoord[indexOfBox][0] = temp.boxCoord[indexOfBox][0] + ddx
+                            temp.boxCoord[indexOfBox][1] = temp.boxCoord[indexOfBox][1] + ddy
+                        if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
+                            temp.nGoal -= 1
+                    
+                    if i == 0:
+                        self.left = temp
+                    elif i == 1:
+                        self.down = temp
+                    elif i == 2:
+                        self.right = temp
+                    elif i == 3:
+                        self.up = temp
+
+                    tempListState = [temp.coord]+self.boxCoord
+                    inserted = False
+                    inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
+                    if inserted:
+                        Openlist.append(temp)
+                        print(tempListState)
+                    if temp.nGoal == len(BoxList):
+                        GOALREACHED = True
+                        GOALID = temp.name
+                        outputListOfMoves(temp)
+                
+                else:
+                    if i == 0:
+                        self.left = DEAD
+                    elif i == 1:
+                        self.down = DEAD
+                    elif i == 2:
+                        self.right = DEAD
+                    elif i == 3:
+                        self.up = DEAD
+
 
 class Tree:
      def __init__(self):
@@ -477,6 +571,7 @@ print('check eligible Coords')
 #print(eligibleCoordList)
 li()
 print('test of first node in tree')
+#rootBoxList = BoxList.copy()
 root = Node(getNameForNode(),'init',manCoord,BoxList,0)
 
 tempListStateRoot = [root.coord]+BoxList
@@ -488,7 +583,7 @@ insertInHashtable(hashTable,root.name,hashing(tempListStateRoot))
 insertInHashtable(hashTable,root.name,hashing(tempListStateRoot))
 
 
-print(root.name, root.hasAllChildren(),root.direction,root.isLeaf(),root.left)
+print(root.name, root.hasAllChildren(),root.direction,root.isLeaf(),root.left, root.isRoot())
 
 
 mytree = Tree()
@@ -515,7 +610,7 @@ Openlist.append(root)
 li()
 print('begin solving')
 while len(Openlist):
-    Openlist[0].createChildren()
+    Openlist[0].createChildren2()
     print(Openlist[0].name)
     if GOALREACHED:
         print('Done - GOAL REACHED')

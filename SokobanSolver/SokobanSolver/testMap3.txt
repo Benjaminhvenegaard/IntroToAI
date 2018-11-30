@@ -1,5 +1,6 @@
-########
-#M..G.G#
-#.JJJ..#
-#..#..G#
-########
+ XXXXXX
+XX...XX
+X.JJ..X
+X.XG.GX
+X.....X
+XXXXXX

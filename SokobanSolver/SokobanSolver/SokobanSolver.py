@@ -1,6 +1,9 @@
 print("Begin program")
 
+from timeit import default_timer as timer
+
 import copy
+
 # ----- Variables and lists -----------------------------------------------------------------------
 
 Openlist=[]
@@ -10,14 +13,14 @@ BoxList = []
 
 initMap = []
 sokobanMap = []
-eligibleCoordList = []
+noBoxList = []
 
 manCoord = [0,0]
 iterator = 1
 
 resultString = ''
 
-WALL = '#'
+WALL = 'X'
 GOAL = 'G'
 PLAYER = 'M'
 DIAMOND = 'J'
@@ -85,157 +88,6 @@ class Node:
         global resultString
 
         if self.isLeaf():
-            temp = Node(getNameForNode(),LEFT,[None,None],[],self.nGoal,self)
-
-            parentBoxCoordinate = self.getboxList().copy()
-
-            temp.boxCoord = parentBoxCoordinate.copy()
-
-            illegal,isGoal,boxPush = isIllegalMove(self.coord,LEFT,self.boxCoord)
-            if not illegal:
-                tempCoordList = self.getCoord().copy()
-                temp.coord[0] = tempCoordList[0]
-                temp.coord[1] = tempCoordList[1]-1
-                
-                if isGoal:    
-                    temp.nGoal +=1
-                if boxPush:
-                    indexOfBox = temp.boxCoord.index(temp.coord)
-                    temp.boxCoord[indexOfBox][1] -= 1
-                    
-                    if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
-                        temp.nGoal -= 1
-
-                self.left = temp
-                tempListState = [temp.coord]+self.boxCoord
-                inserted = False
-                inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
-                if inserted:
-                    Openlist.append(temp)
-                    print(tempListState)
-                if temp.nGoal == len(BoxList):
-                    GOALREACHED = True
-                    GOALID = temp.name
-                    outputListOfMoves(temp)
-                
-            else:
-                self.left = DEAD
-
-            temp = Node(getNameForNode(),DOWN,[None,None],[],self.nGoal,self)
-
-            
-            parentBoxCoordinate = self.getboxList().copy()
-
-            temp.boxCoord = parentBoxCoordinate.copy()
-
-            temp.boxCoord = parentBoxCoordinate
-            illegal,isGoal,boxPush = isIllegalMove(self.coord,DOWN,self.boxCoord)
-            if not illegal:
-                tempCoordList = self.getCoord().copy()
-                temp.coord[0] = tempCoordList[0]+1
-                temp.coord[1] = tempCoordList[1]
-                
-                if isGoal:    
-                    temp.nGoal +=1
-                if boxPush:
-                    indexOfBox = temp.boxCoord.index(temp.coord)
-                    temp.boxCoord[indexOfBox][0]+=1
-                    
-                    if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
-                        temp.nGoal -= 1
-
-                self.down = temp
-                tempListState = [temp.coord]+self.boxCoord
-                inserted = False
-                inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
-                if inserted:
-                    Openlist.append(temp)
-                    print(tempListState)
-                if temp.nGoal == len(BoxList):
-                    GOALREACHED = True
-                    GOALID = temp.name
-                    outputListOfMoves(temp)
-                
-            else:
-                self.down = DEAD
-
-            temp = Node(getNameForNode(),RIGHT,[None,None],[],self.nGoal,self)
-
-            parentBoxCoordinate = self.getboxList().copy()
-
-            temp.boxCoord = parentBoxCoordinate.copy()
-            
-            illegal,isGoal,boxPush = isIllegalMove(self.coord,RIGHT,self.boxCoord)
-            if not illegal:
-                tempCoordList = self.getCoord().copy()
-                temp.coord[0] = tempCoordList[0]
-                temp.coord[1] = tempCoordList[1]+1
-                
-                if isGoal:    
-                    temp.nGoal +=1
-                if boxPush:
-                    indexOfBox = temp.boxCoord.index(temp.coord)
-                    temp.boxCoord[indexOfBox][1]+=1
-                    if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
-                        temp.nGoal -= 1
-
-                self.right = temp
-                tempListState = [temp.coord]+self.boxCoord
-                inserted = False
-                inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
-                if inserted:
-                    Openlist.append(temp)
-                    print(tempListState)
-                if temp.nGoal == len(BoxList):
-                    GOALREACHED = True
-                    GOALID = temp.name
-                    outputListOfMoves(temp)
-                
-            else:
-                self.right = DEAD
-
-            temp = Node(getNameForNode(),UP,[None,None],[],self.nGoal,self)
-
-            parentBoxCoordinate = self.getboxList().copy()
-
-            temp.boxCoord = parentBoxCoordinate.copy()
-            illegal,isGoal,boxPush = isIllegalMove(self.coord,UP,self.boxCoord)
-            if not illegal:
-                tempCoordList = self.getCoord().copy()
-                temp.coord[0] = tempCoordList[0]-1
-                temp.coord[1] = tempCoordList[1]
-                if isGoal:    
-                    temp.nGoal +=1
-                if boxPush:
-                    indexOfBox = temp.boxCoord.index(temp.coord)
-                    temp.boxCoord[indexOfBox][0]-=1
-                    if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
-                        temp.nGoal -= 1
-
-                self.up = temp
-                tempListState = [temp.coord]+self.boxCoord
-                inserted = False
-                inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
-                if inserted:
-                    Openlist.append(temp)
-                    print(tempListState)
-                if temp.nGoal == len(BoxList):
-                    GOALREACHED = True
-                    GOALID = temp.name
-                    outputListOfMoves(temp)
-            else:
-                self.up = DEAD
-
-
-    
-
-
-    def createChildren2(self):
-        global GOALREACHED
-        global GOALID
-        global resultString
-
-        if self.isLeaf():
             for i in range(0,4):
                 if i == 0:
                     ddx = 0
@@ -258,7 +110,6 @@ class Node:
                 tempBoxCoordinate = list(self.getboxList().copy())
                 tempBoxCoordinate = [x[:] for x in self.getboxList()]
                 
-
                 illegal,isGoal,boxPush = isIllegalMove(self.coord,direc,self.boxCoord)
                 if not illegal:
                     tempCoordList = list(self.getCoord().copy())
@@ -284,7 +135,8 @@ class Node:
                     elif i == 3:
                         self.up = temp
 
-                    tempListState = [temp.coord]+self.boxCoord
+                    tempcoord1 = [temp.coord]
+                    tempListState = tempcoord1 + temp.boxCoord
                     inserted = False
                     inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                     if inserted:
@@ -318,16 +170,13 @@ class Tree:
          return 0
 
 
-
-
-
 # ----- Hash functions -------------------------------------------------------------------------
 
 def hashing(listoflist):
     hashval = 0
     for i in listoflist:
         for j in i:
-            hashval = hashval * 71 + j
+            hashval = hashval * 191 + j
 
     return hashval
 
@@ -421,44 +270,113 @@ def goalMoveCheck(Map,coord,VH):
                 break
     return goalSeen
 
-def eligableCoords(Map):
+
+def getNeighbouringWalls(map, coord):
+    # returns the neighbours of 4-way neighbour-check 
+    # The function fails if the coordinate does not have 4 neighbors 
+    # 
+    # 4-way check:
+    #  4
+    # 1X3
+    #  2
+    counter = 0
+    if map[coord[0]][coord[1]-1] == WALL:
+            counter += 1
+    if map[coord[0]+1][coord[1]] == WALL:
+            counter += 1
+    if map[coord[0]][coord[1]+1] == WALL:
+            counter += 1
+    if map[coord[0]-1][coord[1]] == WALL:
+            counter += 1
+    return counter
+
+def checkCorners(map,coord):
+    #returns true if the player tries to push a box into a corner in a four connected mannor
+    # 4-way check:
+    #  4
+    # 1X3
+    #  2
+    counter1 = 0
+    counter2 = 0
+    counter3 = 0
+    counter4 = 0
+    if map[coord[0]][coord[1]-1] == WALL:
+            counter1 += 1
+    if map[coord[0]+1][coord[1]] == WALL:
+            counter2 += 1
+    if map[coord[0]][coord[1]+1] == WALL:
+            counter3 += 1
+    if map[coord[0]-1][coord[1]] == WALL:
+            counter4 += 1
+    #upper left corner:
+    if counter1 and counter4:
+        return True
+    #Upper right
+    elif counter4 and counter3:
+        return True
+    #Lower right
+    elif counter3 and counter2:
+        return True
+    #Lower left
+    elif counter1 and counter2:
+        return True
+    else:
+        return False
+
+
+
+def makeNoBoxList(Map):
     # @ Map         : The game map described in a list of lists, where every element in the inner most list contains is a single character. 
     #                       This character can be either GOAL, FLOOR, WALL or NOTHING 
     # #
 
     # Go through the map
     retList =[]
-    for y in range(len(Map)):
-        for x in range(len(Map[y])):
+    for x in range(1,len(Map)-1):
+        for y in range(1,len(Map[x])-1):
+            nWallsInNeighbourhood = getNeighbouringWalls(Map,[x , y])
+            if checkCorners(Map,[x , y]) and Map[x][y] != GOAL:
+                retList.append([x,y])
+            
+            
+            
 
-            if Map[y][x] is not WALL and Map[y][x] is not NOTHING:
-                # If the current coord is not the player
-                # If the current coord is a deadlock pos (DEADLOCK = DL)
-                nCont = getNeighboursContent(Map, [y,x])
-                count = 0
-                for i in nCont:
-                    if i is WALL:
-                        count += 1
+            
+
+
+
+
+
+
+
+        #    if Map[y][x] is not WALL and Map[y][x] is not NOTHING:
+        #        # If the current coord is not the player
+        #        # If the current coord is a deadlock pos (DEADLOCK = DL)
+        #        nCont = getNeighboursContent(Map, [y,x])
+        #        count = 0
+        #        for i in nCont:
+        #            if i is WALL:
+        #                count += 1
 
                     
-                # If goal append to list - All goal are eligable
-                if Map[y][x] is GOAL:
-                    retList.append([y,x])
+        #        # If goal append to list - All goal are eligable
+        #        if Map[y][x] is GOAL:
+        #            retList.append([y,x])
 
-                else:
-                    # DL check 1 : endWall with goal
-                    print(count, y,x)
-                    if count < 2:
-                        if y is len(Map)-2 or y is 1:
-                            if goalMoveCheck(Map,[y,x], HORIZONTAL):
-                                retList.append([y,x])
+        #        else:
+        #            # DL check 1 : endWall with goal
+        #            print(count, y,x)
+        #            if count < 2:
+        #                if y is len(Map)-2 or y is 1:
+        #                    if goalMoveCheck(Map,[y,x], HORIZONTAL):
+        #                        retList.append([y,x])
 
-                        elif x is len(Map[y])-2 or x is 1: # -1 would be a wall
-                            if goalMoveCheck(Map,[y,x], VERTICAL):
-                                retList.append([y,x])
+        #                elif x is len(Map[y])-2 or x is 1: # -1 would be a wall
+        #                    if goalMoveCheck(Map,[y,x], VERTICAL):
+        #                        retList.append([y,x])
 
-                        else:
-                            retList.append([y,x])
+        #                else:
+        #                    retList.append([y,x])
 
     return retList
 
@@ -470,6 +388,7 @@ def outputListOfMoves(self):
     global resultString
     #resultString += self.direction
     while self.isRoot:
+        print(self.getCoord())
         resultString += self.direction
         self = self.parent
         if self.direction == 'init':
@@ -525,13 +444,16 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
         dx = 1
     someCoordinate = [[x + dx,y + dy]]
     if ([x + dx,y + dy]) in boxList:
-        if sokobanMap[x + (2 * dx)][y + (2 * dy)] == GOAL:
-            return False, True, True               #Returns legal 
-        elif ([x + (2 * dx) , y + (2 * dy)]) in boxList:
-            return True, False, True
-        elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == FLOOR:# and sokobanMap[x + (2 * dx)][y + (2 * dy)] in eligibleCoordList:
-            return False, False,True
-        else: 
+        if ([x + (2 * dx) , y + (2 * dy)]) not in noBoxList:
+            if ([x + (2 * dx) , y + (2 * dy)]) in boxList:
+                return True, None, None
+            elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == GOAL:
+                return False, True, True               #Returns legal 
+            elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == FLOOR:# and sokobanMap[x + (2 * dx)][y + (2 * dy)] in eligibleCoordList:
+                return False, False,True
+            else: 
+                return True, None, None
+        else:
             return True, None, None
     else:
         if sokobanMap[x + dx][y + dy] == FLOOR or sokobanMap[x + dx][y + dy] == GOAL:
@@ -542,7 +464,8 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-readMap("testMap2")   # Read the competition map
+readMap("CompetitionMap")
+#readMap("testMap3")   # Read the competition map
 print("\n")
 
 sokobanMap = initMap[:][:]
@@ -558,16 +481,26 @@ visualizeMap2(initMap)
 print('sokobanMap')
 visualizeMap2(sokobanMap)
 li()
+# For manual input:
+#BoxList = []
+#BoxList = [[2,2],[2,3]]
+#GoalList = []
+#GoalList = [[2,1],[2,3]]
+#manCoord = []
+#manCoord = [1,1]
+# For automatic
 print('initial coordinates')
 print(GoalList)
 print(BoxList)
 print(manCoord)
 
+
+
 li()
 print('check eligible Coords')
-#eligibleCoordList = eligableCoords(sokobanMap)
+noBoxList = makeNoBoxList(sokobanMap)
 
-#print(eligibleCoordList)
+print(noBoxList)
 li()
 print('test of first node in tree')
 #rootBoxList = BoxList.copy()
@@ -608,9 +541,10 @@ Openlist.append(root)
 #print(hashTable)
 li()
 print('begin solving')
+start = timer()
 while len(Openlist):
-    Openlist[0].createChildren2()
     print(Openlist[0].name, len(Openlist))
+    Openlist[0].createChildren()
     if GOALREACHED:
         print('Done - GOAL REACHED')
         print('path')
@@ -619,21 +553,22 @@ while len(Openlist):
     else:
         print('Goal not reached')
     Openlist.pop(0)
+end = timer()
     
-
+# ...
 
     
 li()
 print('done solving hashTable:')
-#print(hashTable)
+print(len(hashTable))
 
 
 li()
-print('output string' , resultString[::-1])
 
+print('output string - number of moves:',len(resultString),'  ' , resultString[::-1])
 li()
-print('nummer 28' , hashing([[3,3],[2,3],[3,2]]))
-print('nummer 82' , hashing([[3,3],[2,3],[2,3]]))
+print('Time elapsed: ', end - start) # Time in seconds, e.g. 5.38091952400282
+
 
 
 

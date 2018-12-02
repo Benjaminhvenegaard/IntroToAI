@@ -1,5 +1,6 @@
- ####
-#GJM.#
-#..J.#
-#..G.#
- ####
+XXXXXX
+X..M.X
+XJXXXX
+X.X
+XGX
+XXX

@@ -10,6 +10,7 @@ Openlist=[]
 ClosedList = []
 GoalList = []
 BoxList = []
+BoxOnGoal = []
 
 initMap = []
 sokobanMap = []
@@ -26,6 +27,7 @@ PLAYER = 'M'
 DIAMOND = 'J'
 FLOOR = '.'
 NOTHING = ' '
+BOXANDGOAL = 'O'
 
 UP  = 'u'
 LEFT = 'l'
@@ -90,28 +92,46 @@ class Node:
         if self.isLeaf():
             for i in range(0,4):
                 if i == 0:
+                    direc = LEFT
                     ddx = 0
                     ddy = -1
-                    direc = LEFT
                 elif i == 1:
+                    direc = DOWN
                     ddx = +1
                     ddy = 0
-                    direc = DOWN
                 elif i == 2:
+                    direc = RIGHT
                     ddx = 0
                     ddy = +1
-                    direc = RIGHT
                 elif i == 3:
+                    direc = UP
                     ddx = -1
                     ddy = 0
-                    direc = UP
                 temp = Node(getNameForNode(),direc,[None,None],[None],self.nGoal,self)
 
                 tempBoxCoordinate = list(self.getboxList().copy())
                 tempBoxCoordinate = [x[:] for x in self.getboxList()]
                 
                 illegal,isGoal,boxPush = isIllegalMove(self.coord,direc,self.boxCoord)
-                if not illegal:
+                if illegal:
+                    if i == 0:
+                        self.left = DEAD
+                    elif i == 1:
+                        self.down = DEAD
+                    elif i == 2:
+                        self.right = DEAD
+                    elif i == 3:
+                        self.up = DEAD
+                elif not boxPush and isOppositeMove(self.direction,temp.direction) and not illegal:
+                    if i == 0:
+                        self.left = DEAD
+                    elif i == 1:
+                        self.down = DEAD
+                    elif i == 2:
+                        self.right = DEAD
+                    elif i == 3:
+                        self.up = DEAD
+                elif not illegal:
                     tempCoordList = list(self.getCoord().copy())
                     temp.coord[0] = tempCoordList[0] + ddx
                     temp.coord[1] = tempCoordList[1] + ddy
@@ -141,12 +161,11 @@ class Node:
                     inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                     if inserted:
                         Openlist.append(temp)
-                        print(tempListState)
+                        #print(tempListState)
                     if temp.nGoal == len(BoxList):
                         GOALREACHED = True
                         GOALID = temp.name
                         outputListOfMoves(temp)
-                
                 else:
                     if i == 0:
                         self.left = DEAD
@@ -156,6 +175,7 @@ class Node:
                         self.right = DEAD
                     elif i == 3:
                         self.up = DEAD
+                
 
 
 class Tree:
@@ -230,6 +250,11 @@ def copyCleanMap(outputMap):
             elif outputMap[i][j] == DIAMOND:
                 BoxList.append([i,j])
                 outputMap[i][j] = FLOOR
+            elif outputMap[i][j] == BOXANDGOAL:
+                BoxOnGoal.append([i,j])
+                GoalList.append([i,j])
+                BoxList.append([i,j])
+                outputMap[i][j] = GOAL
     return outputMap, mCoord
         
 
@@ -279,16 +304,17 @@ def getNeighbouringWalls(map, coord):
     #  4
     # 1X3
     #  2
-    counter = 0
+    tempList = []
+    
     if map[coord[0]][coord[1]-1] == WALL:
-            counter += 1
+        tempList.append('LEFT')
     if map[coord[0]+1][coord[1]] == WALL:
-            counter += 1
+        tempList.append('DOWN')
     if map[coord[0]][coord[1]+1] == WALL:
-            counter += 1
+        tempList.append('RIGHT')
     if map[coord[0]-1][coord[1]] == WALL:
-            counter += 1
-    return counter
+        tempList.append('UP')
+    return tempList
 
 def checkCorners(map,coord):
     #returns true if the player tries to push a box into a corner in a four connected mannor
@@ -330,25 +356,64 @@ def makeNoBoxList(Map):
     #                       This character can be either GOAL, FLOOR, WALL or NOTHING 
     # #
 
-    # Go through the map
+    # Go through the map and find the corners which can't be put boxes into
     retList =[]
     for x in range(1,len(Map)-1):
         for y in range(1,len(Map[x])-1):
-            nWallsInNeighbourhood = getNeighbouringWalls(Map,[x , y])
-            if checkCorners(Map,[x , y]) and Map[x][y] != GOAL:
-                retList.append([x,y])
-            
-            
-            
+            if Map[x][y] != WALL:
+                nWallsInNeighbourhood = len(getNeighbouringWalls(Map,[x , y]))
+                if checkCorners(Map,[x , y]) and Map[x][y] != GOAL:
+                    retList.append([x,y])
+
+    ## Find horisontal walls which do not have any goals
+    #commonDirection = 0
+    #tempRetList=[]
+    ## Search all elements in the list and find pairs of corners
+    #for x in range(len(retList)):
+    #    for y in range(len(retList)):
+    #        if retList[x][0] == retList[y][0] and x != y :
+    #            Walls1 = getNeighbouringWalls(Map,[retList[x][0],retList[x][1]])
+    #            Walls2 = getNeighbouringWalls(Map,[retList[y][0],retList[y][1]])
+    #            # Try to connect the corners
+    #            if len(Walls1) >= len(Walls2):
+    #                for i in range(len(Walls2)):
+    #                    if Walls2[i] in Walls1:
+    #                        commonDirection = Walls2[i]
+    #            else:
+    #                for i in range(len(Walls1)):
+    #                    if Walls1[i] in Walls2:
+    #                        commonDirection = Walls1[i]
+    #            #If they don't have a goal and share 1 wall
+    #            #Put all points along that line on retList
+    #            for i in range(retList[y][1]-retList[x][1]-1):
+    #                walls = getNeighbouringWalls(Map,[retList[x][0],retList[x][1]+i])
+    #                if (commonDirection in walls): #and Map[x][1+i] ==FLOOR:
+    #                    tempRetList.append(retList[x][1]+i)
+    #            if len(tempRetList) == range(retList[y][1]-retList[x][1]):
+    #                retList.append(tempRetList)
+
+    #        #Do the same for vertical lines
+    #for x in retList:
+    #    for y in retList:
+    #        if retList[x][1] == retList[y][1]:
+    #            Walls1 = getNeighbouringWalls(retList[x][1])
+    #            Walls2 = getNeighbouringWalls(retList[y][1])
+    #        # Try to connect the corners 
+    #            for i in range(len(Walls1)):
+    #                if Walls2[i] in Walls1:
+    #                    commonDirection = Walls2[i]
+    #            #If they don't have a goal and share 1 wall
+    #            #Put all points along that line on retList
+    #            for i in range(retList[y][0]-retList[x][0]):
+    #                if commonDirection in getNeighbouringWalls(retList[x][0]+i) and Map[x][0]+i != GOAL:
+    #                    tempRetList.append(retList[x][0]+i)
+    #            if len(tempRetList) == range(retList[y][0]-retList[x][0]):
+    #                retList.append(tempRetList)
+
+
+    # Find vertical walls which do not have any goals
 
             
-
-
-
-
-
-
-
         #    if Map[y][x] is not WALL and Map[y][x] is not NOTHING:
         #        # If the current coord is not the player
         #        # If the current coord is a deadlock pos (DEADLOCK = DL)
@@ -424,6 +489,18 @@ def getNameForNode():
     iterator+=1
     return iterator-1
 
+def isOppositeMove(parentDir,childDir):
+    if parentDir == LEFT and childDir == RIGHT:
+        return True
+    if parentDir == DOWN and childDir == UP:
+        return True
+    if parentDir == RIGHT and childDir == LEFT:
+        return True
+    if parentDir == UP and childDir == DOWN:
+        return True
+    else:
+        return False
+     
 
 def isIllegalMove(coord, dir, boxList): # Returns two variables: first being illegal move, Second being whether the diamond is placed on a goal
     # This function takes the current map as a reference for box positions but this should be changed to the list with box coordinates
@@ -436,12 +513,12 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
     if dir == LEFT:
         dy = -1
+    elif dir == DOWN:
+        dx = 1
     elif dir == RIGHT:
         dy = 1
     elif dir == UP:
         dx = -1
-    elif dir == DOWN:
-        dx = 1
     someCoordinate = [[x + dx,y + dy]]
     if ([x + dx,y + dy]) in boxList:
         if ([x + (2 * dx) , y + (2 * dy)]) not in noBoxList:
@@ -449,7 +526,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
                 return True, None, None
             elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == GOAL:
                 return False, True, True               #Returns legal 
-            elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == FLOOR:# and sokobanMap[x + (2 * dx)][y + (2 * dy)] in eligibleCoordList:
+            elif sokobanMap[x + (2 * dx)][y + (2 * dy)] == FLOOR:
                 return False, False,True
             else: 
                 return True, None, None
@@ -464,8 +541,9 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-readMap("CompetitionMap")
-#readMap("testMap3")   # Read the competition map
+readMap('CompetitionMap')
+#readMap("testMap5")
+#readMap("testMap11")   # Read the competition map
 print("\n")
 
 sokobanMap = initMap[:][:]
@@ -473,7 +551,15 @@ print('initMap')
 visualizeMap2(initMap)
 print('sokobanMap')
 visualizeMap2(sokobanMap)
+# For manual input:
 sokobanMap,manCoord = copyCleanMap(sokobanMap)
+#BoxList = []
+#BoxList = [[2,2],[2,3]]
+#GoalList = []
+#GoalList = [[2,1],[2,3]]
+#manCoord = []
+#manCoord = [1,1]
+countGoals = len(BoxOnGoal)
             
 li()   # todo : fix initMap
 print('initMap')
@@ -481,33 +567,31 @@ visualizeMap2(initMap)
 print('sokobanMap')
 visualizeMap2(sokobanMap)
 li()
-# For manual input:
-#BoxList = []
-#BoxList = [[2,2],[2,3]]
-#GoalList = []
-#GoalList = [[2,1],[2,3]]
-#manCoord = []
-#manCoord = [1,1]
 # For automatic
 print('initial coordinates')
-print(GoalList)
-print(BoxList)
-print(manCoord)
+print('List of Goals: ',GoalList)
+print('List of Boxes: ',BoxList)
+print('Man-coordinates: ',manCoord)
+print('Amount of boxes already on goal: ',countGoals)
 
 
 
 li()
-print('check eligible Coords')
+print('check noBoxList')
 noBoxList = makeNoBoxList(sokobanMap)
 
+noBoxList+=[[6,1],[7,1],[8,1],[9,1],[10,2]]
+
+
 print(noBoxList)
+
 li()
 print('test of first node in tree')
 #rootBoxList = BoxList.copy()
-root = Node(getNameForNode(),'init',manCoord,BoxList,0)
-
+root = Node(getNameForNode(),'init',manCoord,BoxList,countGoals)
+print('root name: ',root.getName())
 tempListStateRoot = [root.coord]+BoxList
-
+print('root info: ',tempListStateRoot)
 
 li()
 print("Hashing root")
@@ -539,11 +623,17 @@ Openlist.append(root)
 #    print(i.coord)
   
 #print(hashTable)
+
+
 li()
 print('begin solving')
+print('Name of the first element on Openlist: ', Openlist[0].name)
 start = timer()
+counterForCounts = 0
 while len(Openlist):
-    print(Openlist[0].name, len(Openlist))
+    counterForCounts += 1
+    #for p in range(len(Openlist)):
+    #    print(Openlist[p].name,end=', ')
     Openlist[0].createChildren()
     if GOALREACHED:
         print('Done - GOAL REACHED')
@@ -551,13 +641,13 @@ while len(Openlist):
         #while:
         break
     else:
-        print('Goal not reached')
+        if counterForCounts%1000==1:
+            print('Length on Openlist: ',len(Openlist),'  Nodes on Openlist:  ',end='')
+            print('Goal not reached')
     Openlist.pop(0)
 end = timer()
     
-# ...
-
-    
+   
 li()
 print('done solving hashTable:')
 print(len(hashTable))
@@ -567,9 +657,4 @@ li()
 
 print('output string - number of moves:',len(resultString),'  ' , resultString[::-1])
 li()
-print('Time elapsed: ', end - start) # Time in seconds, e.g. 5.38091952400282
-
-
-
-
-
+print('Time elapsed in seconds: ', end - start) # Time in seconds, e.g. 5.38091952400282

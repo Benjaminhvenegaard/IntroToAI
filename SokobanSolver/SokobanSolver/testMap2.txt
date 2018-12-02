@@ -1,5 +1,5 @@
-######
-#M...#
-#..JG#
-#.GJ.#
-######
+XXXXXX
+XM...X
+X..JGX
+X.GJ.X
+XXXXXX

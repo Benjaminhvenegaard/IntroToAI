@@ -304,16 +304,17 @@ def getNeighbouringWalls(map, coord):
     #  4
     # 1X3
     #  2
-    counter = 0
+    tempList = []
+    
     if map[coord[0]][coord[1]-1] == WALL:
-            counter += 1
+        tempList.append('LEFT')
     if map[coord[0]+1][coord[1]] == WALL:
-            counter += 1
+        tempList.append('DOWN')
     if map[coord[0]][coord[1]+1] == WALL:
-            counter += 1
+        tempList.append('RIGHT')
     if map[coord[0]-1][coord[1]] == WALL:
-            counter += 1
-    return counter
+        tempList.append('UP')
+    return tempList
 
 def checkCorners(map,coord):
     #returns true if the player tries to push a box into a corner in a four connected mannor
@@ -360,19 +361,54 @@ def makeNoBoxList(Map):
     for x in range(1,len(Map)-1):
         for y in range(1,len(Map[x])-1):
             if Map[x][y] != WALL:
-                nWallsInNeighbourhood = getNeighbouringWalls(Map,[x , y])
+                nWallsInNeighbourhood = len(getNeighbouringWalls(Map,[x , y]))
                 if checkCorners(Map,[x , y]) and Map[x][y] != GOAL:
                     retList.append([x,y])
 
-    # Find horisontal walls which do not have any goals
-    for x in retList:
-        for y in retList[x]:
-            # Search all elements in the list and find pairs of corners
-            # Try to connect the corners 
-            #If they don't have a goal and share 1 wall
-            #Put all points along that line on retList
-            #Do the same for vertical lines
+    ## Find horisontal walls which do not have any goals
+    #commonDirection = 0
+    #tempRetList=[]
+    ## Search all elements in the list and find pairs of corners
+    #for x in range(len(retList)):
+    #    for y in range(len(retList)):
+    #        if retList[x][0] == retList[y][0] and x != y :
+    #            Walls1 = getNeighbouringWalls(Map,[retList[x][0],retList[x][1]])
+    #            Walls2 = getNeighbouringWalls(Map,[retList[y][0],retList[y][1]])
+    #            # Try to connect the corners
+    #            if len(Walls1) >= len(Walls2):
+    #                for i in range(len(Walls2)):
+    #                    if Walls2[i] in Walls1:
+    #                        commonDirection = Walls2[i]
+    #            else:
+    #                for i in range(len(Walls1)):
+    #                    if Walls1[i] in Walls2:
+    #                        commonDirection = Walls1[i]
+    #            #If they don't have a goal and share 1 wall
+    #            #Put all points along that line on retList
+    #            for i in range(retList[y][1]-retList[x][1]-1):
+    #                walls = getNeighbouringWalls(Map,[retList[x][0],retList[x][1]+i])
+    #                if (commonDirection in walls): #and Map[x][1+i] ==FLOOR:
+    #                    tempRetList.append(retList[x][1]+i)
+    #            if len(tempRetList) == range(retList[y][1]-retList[x][1]):
+    #                retList.append(tempRetList)
 
+    #        #Do the same for vertical lines
+    #for x in retList:
+    #    for y in retList:
+    #        if retList[x][1] == retList[y][1]:
+    #            Walls1 = getNeighbouringWalls(retList[x][1])
+    #            Walls2 = getNeighbouringWalls(retList[y][1])
+    #        # Try to connect the corners 
+    #            for i in range(len(Walls1)):
+    #                if Walls2[i] in Walls1:
+    #                    commonDirection = Walls2[i]
+    #            #If they don't have a goal and share 1 wall
+    #            #Put all points along that line on retList
+    #            for i in range(retList[y][0]-retList[x][0]):
+    #                if commonDirection in getNeighbouringWalls(retList[x][0]+i) and Map[x][0]+i != GOAL:
+    #                    tempRetList.append(retList[x][0]+i)
+    #            if len(tempRetList) == range(retList[y][0]-retList[x][0]):
+    #                retList.append(tempRetList)
 
 
     # Find vertical walls which do not have any goals
@@ -505,7 +541,8 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-readMap("CompetitionMap")
+readMap('CompetitionMap')
+#readMap("testMap5")
 #readMap("testMap11")   # Read the competition map
 print("\n")
 
@@ -543,7 +580,11 @@ li()
 print('check noBoxList')
 noBoxList = makeNoBoxList(sokobanMap)
 
+noBoxList+=[[6,1],[7,1],[8,1],[9,1],[10,2]]
+
+
 print(noBoxList)
+
 li()
 print('test of first node in tree')
 #rootBoxList = BoxList.copy()
@@ -586,6 +627,7 @@ Openlist.append(root)
 
 li()
 print('begin solving')
+print('Name of the first element on Openlist: ', Openlist[0].name)
 start = timer()
 counterForCounts = 0
 while len(Openlist):
@@ -605,9 +647,7 @@ while len(Openlist):
     Openlist.pop(0)
 end = timer()
     
-# ...
-
-    
+   
 li()
 print('done solving hashTable:')
 print(len(hashTable))

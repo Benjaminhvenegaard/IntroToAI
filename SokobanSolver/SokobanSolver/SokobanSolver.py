@@ -29,10 +29,15 @@ FLOOR = '.'
 NOTHING = ' '
 BOXANDGOAL = 'O'
 
-UP  = 'u'
 LEFT = 'l'
 DOWN = 'd'
 RIGHT = 'r'
+UP  = 'u'
+
+LEFTCAPITAL = 'L'
+DOWNCAPITAL = 'D'
+RIGHTCAPITAL = 'R'
+UPCAPITAL = 'U'
 
 DEAD = 0
 
@@ -145,6 +150,14 @@ class Node:
                             temp.boxCoord[indexOfBox][1] = temp.boxCoord[indexOfBox][1] + ddy
                         if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
                             temp.nGoal -= 1
+                        if i == 0:
+                            temp.direction = LEFTCAPITAL
+                        elif i == 1:
+                            temp.direction = DOWNCAPITAL
+                        elif i == 2:
+                            temp.direction = RIGHTCAPITAL
+                        elif i == 3:
+                            temp.direction = UPCAPITAL
                     
                     if i == 0:
                         self.left = temp
@@ -388,6 +401,7 @@ def makeNoBoxList(Map):
                             commonDirection = Walls1[i]
                 #If they don't have a goal and share 1 wall
                 #Put all points along that line on retList
+                distanceBetweenCorners=0
                 for i in range(1,retList[y][1]-retList[x][1]):
                     distanceBetweenCorners = retList[y][1]-retList[x][1]-1
                     walls = getNeighbouringWalls(Map,[retList[x][0],retList[x][1]+i])
@@ -569,8 +583,8 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-#readMap('CompetitionMap')
-readMap("testMap2")
+readMap('CompetitionMap')
+#readMap("testMap12")
 #readMap("testMap11")   # Read the competition map
 print("\n")
 

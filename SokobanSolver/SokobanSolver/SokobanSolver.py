@@ -1,36 +1,36 @@
 print("Begin program")
 
+# ----- Imports ----------------------------------------------------------------------
 from timeit import default_timer as timer
 
 import copy
 
 # ----- Variables and lists -----------------------------------------------------------------------
 
-Openlist=[]
-ClosedList = []
-GoalList = []
-BoxList = []
-BoxOnGoal = []
+Openlist = []           # A list containing the notes which hasn't yet been searched. They all don't have children.
+GoalList = []           # List containg the coordinates of all goals found in the map.
+BoxList = []            # List with the box-coordinates found on the map.
+BoxOnGoal = []          # List containing the coordinates on the map where a box is on a goal at start-time.
 
-initMap = []
-sokobanMap = []
-noBoxList = []
+initMap = []            # The first list the sokobanmap from a txt file is read to. (Most to get it into the program properly).
+sokobanMap = []         # Resulting map where boxes and the man has been removed. This map is then used for reference through the solving of the map.
+noBoxList = []          # A list containing the coordinates in a map where a box is not allowed to be spushed to. Much like a no flight list but for coordinates.
 
-manCoord = [0,0]
-iterator = 1
+manCoord = [0,0]        # Man-coordinates can be set here for manually inputting the map (No longer necessary)
+iterator = 1            # Iterator for naming nodes.
 
-resultString = ''
+resultString = ''       # The resulting string which is output as a stream of characters corresponding to the movements needed to solve the map.
 
-WALL = 'X'
-GOAL = 'G'
+WALL = 'X'              # Below is the different characters for naming the structure of a map in the txt file. This can be altered
+GOAL = 'G'              # to better fit individual needs.
 PLAYER = 'M'
 DIAMOND = 'J'
 FLOOR = '.'
 NOTHING = ' '
 BOXANDGOAL = 'O'
 
-LEFT = 'l'
-DOWN = 'd'
+LEFT = 'l'              # Directions for the outputstring as the different characters. Further below is the capitals for box-moves so it can be differentiatet
+DOWN = 'd'              # between when the man or robot is pushing a box or not.
 RIGHT = 'r'
 UP  = 'u'
 
@@ -39,12 +39,12 @@ DOWNCAPITAL = 'D'
 RIGHTCAPITAL = 'R'
 UPCAPITAL = 'U'
 
-DEAD = 0
+DEAD = 0                # Name for child-notes which are repetitions of earlier states
 
-GOALREACHED = False
+GOALREACHED = False     # A variable which is set to True when all boxes are moved to a goal which signifies the goal state.
 GOALID = 0
 
-X = 1
+X = 1                   # Variables which aren't used.
 Y = 0
 VERTICAL = False
 HORIZONTAL = True
@@ -54,7 +54,7 @@ hashTable = {} # Hashtable for holding the sorted positions of boxes
 
 # ----- Classes -------------------------------------------------------------------------
 
-class Node:
+class Node:             # The node class for storage of the state of the map with the corresponding direction and relatio to parent and children (if any).
     def __init__(self, name, direction, coord, boxCoord, nGoal, parent = None):
         self.name = name
         self.direction = direction
@@ -67,36 +67,38 @@ class Node:
         self.right = None
         self.parent = parent
 
-    def isRoot(self):
+    def isRoot(self):       # Function to test if a node is the root node.
         if self.parent == None:
             return not self.parent
         else:
             return False
 
-    def isLeaf(self):
+    def isLeaf(self):       # Function to test whether a note has children or not. If it has children it is therefore not a leaf.
         return not ( self.left or self.right or self.down or self.up)
 
-    def hasAllChildren(self):
+    def hasAllChildren(self): # Function very much like isLeaf().
         return (self.left and self.right and self.down and self.up)
 
-    def getName(self):
+    def getName(self):      # Function to get the name of the node.
         return self.name
 
-    def getCoord(self):
+    def getCoord(self):         # Function to get the coordinates of said note.
         return self.coord
 
-    def getboxList(self):
+    def getboxList(self):       # Function to get the boxcoordinates for the node.
         return self.boxCoord
 
 
-    def createChildren(self):
-        global GOALREACHED
+    def createChildren(self):       # Function to make the children of a given node. This function makes children in the order: 
+                                    # Left -> Down -> Right -> Up and checks if it is a viable child. If not the node "Dies".
+        global GOALREACHED          # The global is used to make the variable or list with a global property so the resultsring 
+                                    # is not initialized here but the global list used.
         global GOALID
         global resultString
 
-        if self.isLeaf():
-            for i in range(0,4):
-                if i == 0:
+        if self.isLeaf():           # Check the node whether it is a leaf. Only leafs should be created children from since it makes all directions at the same time
+            for i in range(0,4):    # For loop to go through the four directions and make the functionality more streamlined by not having a block for each direction 
+                if i == 0:          # but rather have one single block with different variables each time it runs.
                     direc = LEFT
                     ddx = 0
                     ddy = -1
@@ -112,13 +114,13 @@ class Node:
                     direc = UP
                     ddx = -1
                     ddy = 0
-                temp = Node(getNameForNode(),direc,[None,None],[None],self.nGoal,self)
+                temp = Node(getNameForNode(),direc,[None,None],[None],self.nGoal,self)  # Make a temporary child node.
 
-                tempBoxCoordinate = list(self.getboxList().copy())
-                tempBoxCoordinate = [x[:] for x in self.getboxList()]
+                tempBoxCoordinate = list(self.getboxList().copy())      # Deep copy the list instead of just pointing to the same place in memory.
+                tempBoxCoordinate = [x[:] for x in self.getboxList()]   # make sure to make a deep copy
                 
-                illegal,isGoal,boxPush = isIllegalMove(self.coord,direc,self.boxCoord)
-                if illegal:
+                illegal,isGoal,boxPush = isIllegalMove(self.coord,direc,self.boxCoord)  # Check isIllegalMove
+                if illegal:                                                             # Kill children which are illegal fast to save time
                     if i == 0:
                         self.left = DEAD
                     elif i == 1:
@@ -127,8 +129,8 @@ class Node:
                         self.right = DEAD
                     elif i == 3:
                         self.up = DEAD
-                elif not boxPush and isOppositeMove(self.direction,temp.direction) and not illegal:
-                    if i == 0:
+                elif not boxPush and isOppositeMove(self.direction,temp.direction) and not illegal: # Kill child-moves which are opposite of their parent and don't move a box
+                    if i == 0:                                                                      # since this doesn't change the state of the map.
                         self.left = DEAD
                     elif i == 1:
                         self.down = DEAD
@@ -136,19 +138,19 @@ class Node:
                         self.right = DEAD
                     elif i == 3:
                         self.up = DEAD
-                elif not illegal:
+                elif not illegal:       # if legal give the nodes man- and box coordinates corresponding to the parent and the move.
                     tempCoordList = list(self.getCoord().copy())
                     temp.coord[0] = tempCoordList[0] + ddx
                     temp.coord[1] = tempCoordList[1] + ddy
                     temp.boxCoord = tempBoxCoordinate[:]
                     if isGoal:    
                         temp.nGoal +=1
-                    if boxPush:
+                    if boxPush:         # if a box is pushed update the coordinate of that box in the given direction
                         if temp.coord in tempBoxCoordinate:
                             indexOfBox = tempBoxCoordinate.index(temp.coord)
                             temp.boxCoord[indexOfBox][0] = temp.boxCoord[indexOfBox][0] + ddx
                             temp.boxCoord[indexOfBox][1] = temp.boxCoord[indexOfBox][1] + ddy
-                        if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL:
+                        if sokobanMap[temp.coord[0]][temp.coord[1]] == GOAL: # If a box is moved away from a goal decrement the amount of goals reached in that node.
                             temp.nGoal -= 1
                         if i == 0:
                             temp.direction = LEFTCAPITAL
@@ -158,8 +160,7 @@ class Node:
                             temp.direction = RIGHTCAPITAL
                         elif i == 3:
                             temp.direction = UPCAPITAL
-                    
-                    if i == 0:
+                    if i == 0:              # Input the direction to the coresponding place among child-nodes
                         self.left = temp
                     elif i == 1:
                         self.down = temp
@@ -172,14 +173,13 @@ class Node:
                     tempListState = tempcoord1 + temp.boxCoord
                     inserted = False
                     inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
-                    if inserted:
+                    if inserted: # only insert a node on the Openlist if it is inserted in the hashtable
                         Openlist.append(temp)
-                        #print(tempListState)
-                    if temp.nGoal == len(BoxList):
+                    if temp.nGoal == len(BoxList): # if the amount of boxes on goals matches the length of the goalList recognise this as the goal state.
                         GOALREACHED = True
                         GOALID = temp.name
                         outputListOfMoves(temp)
-                else:
+                else:                       # if every check fails the node should not be recognised as a viable option and therefore should be dead:
                     if i == 0:
                         self.left = DEAD
                     elif i == 1:
@@ -191,7 +191,7 @@ class Node:
                 
 
 
-class Tree:
+class Tree:         # Tree class not implementet properly
      def __init__(self):
          self.root = None
          self.size = 0
@@ -205,7 +205,7 @@ class Tree:
 
 # ----- Hash functions -------------------------------------------------------------------------
 
-def hashing(listoflist):
+def hashing(listoflist): # Makes the hashvalue for an input list
     hashval = 0
     for i in listoflist:
         for j in i:
@@ -213,7 +213,7 @@ def hashing(listoflist):
 
     return hashval
 
-def insertInHashtable(hashtable, listoflists, key):
+def insertInHashtable(hashtable, listoflists, key): # Inserts the given list on the key position in a hashtable. The function outputs true or false if the place is vacant or free.
     if not hashtable.get(key):
         hashtable[key] = listoflists
         return True
@@ -238,7 +238,7 @@ def readMap(nameOfFile): #Reads the map and outputs the layout to a list of stri
 
 
 
-def visualizeMap(aMap):
+def visualizeMap(aMap): # Function which runs through the map and outputs it to the console
     for i in range(len(aMap)):
         for j in range(len(aMap[i])):
             print(aMap[i][j],end="")
@@ -246,24 +246,24 @@ def visualizeMap(aMap):
     print("\n")
 
 
-def visualizeMap2(aMap):
+def visualizeMap2(aMap): # Function which runs through the map and outputs it to the console
     for i in aMap:
         print(i)
 
-def copyCleanMap(outputMap):
+def copyCleanMap(outputMap): # Function to read to map into a format to make it a reference map.
     mCoord=[]
     for i in range(len(outputMap)):
         for j in range(len(outputMap[i])):
-            if outputMap[i][j] == GOAL:
+            if outputMap[i][j] == GOAL: # Check the tile for goals
                 GoalList.append([i,j])
-            elif outputMap[i][j] == PLAYER:
+            elif outputMap[i][j] == PLAYER: # Check the tile for the player
                 print(i,j)
                 mCoord = [i,j]
                 outputMap[i][j] = FLOOR
-            elif outputMap[i][j] == DIAMOND:
+            elif outputMap[i][j] == DIAMOND: # Check the tile for Diamonds
                 BoxList.append([i,j])
                 outputMap[i][j] = FLOOR
-            elif outputMap[i][j] == BOXANDGOAL:
+            elif outputMap[i][j] == BOXANDGOAL: # Check the tile for goals with boxes on them
                 BoxOnGoal.append([i,j])
                 GoalList.append([i,j])
                 BoxList.append([i,j])
@@ -435,55 +435,7 @@ def makeNoBoxList(Map):
                         tempRetList.append([retList[x][0]+i,retList[x][1]])
                 if len(tempRetList) == distanceBetweenCorners:
                     retList += tempRetList    #        #Do the same for vertical lines
-    #for x in retList:
-    #    for y in retList:
-    #        if retList[x][1] == retList[y][1]:
-    #            Walls1 = getNeighbouringWalls(retList[x][1])
-    #            Walls2 = getNeighbouringWalls(retList[y][1])
-    #        # Try to connect the corners 
-    #            for i in range(len(Walls1)):
-    #                if Walls2[i] in Walls1:
-    #                    commonDirection = Walls2[i]
-    #            #If they don't have a goal and share 1 wall
-    #            #Put all points along that line on retList
-    #            for i in range(retList[y][0]-retList[x][0]):
-    #                if commonDirection in getNeighbouringWalls(retList[x][0]+i) and Map[x][0]+i != GOAL:
-    #                    tempRetList.append(retList[x][0]+i)
-    #            if len(tempRetList) == range(retList[y][0]-retList[x][0]):
-    #                retList.append(tempRetList)
 
-
-    # Find vertical walls which do not have any goals
-
-            
-        #    if Map[y][x] is not WALL and Map[y][x] is not NOTHING:
-        #        # If the current coord is not the player
-        #        # If the current coord is a deadlock pos (DEADLOCK = DL)
-        #        nCont = getNeighboursContent(Map, [y,x])
-        #        count = 0
-        #        for i in nCont:
-        #            if i is WALL:
-        #                count += 1
-
-                    
-        #        # If goal append to list - All goal are eligable
-        #        if Map[y][x] is GOAL:
-        #            retList.append([y,x])
-
-        #        else:
-        #            # DL check 1 : endWall with goal
-        #            print(count, y,x)
-        #            if count < 2:
-        #                if y is len(Map)-2 or y is 1:
-        #                    if goalMoveCheck(Map,[y,x], HORIZONTAL):
-        #                        retList.append([y,x])
-
-        #                elif x is len(Map[y])-2 or x is 1: # -1 would be a wall
-        #                    if goalMoveCheck(Map,[y,x], VERTICAL):
-        #                        retList.append([y,x])
-
-        #                else:
-        #                    retList.append([y,x])
 
     return retList
 
@@ -491,7 +443,10 @@ def makeNoBoxList(Map):
 def li():
     print('--------------------------------------------------------')
 
-def outputListOfMoves(self):
+def outputListOfMoves(self): # function to make the resulting string from the solver.
+    # It functions by getting the node which is a goal. From there traverse through all the parents
+    # to the root node and output the directions on the nodes. This gives an inversed list
+    # which later has to be turned around.
     global resultString
     #resultString += self.direction
     while self.isRoot:
@@ -526,12 +481,12 @@ def sortCoord(listoflists):
     return temp
 
 
-def getNameForNode():
+def getNameForNode(): # Function to name nodes in an incrementally manner.
     global iterator
     iterator+=1
     return iterator-1
 
-def isOppositeMove(parentDir,childDir):
+def isOppositeMove(parentDir,childDir): # Checks whether the current direction is the direct opposite of the last (parent) direction.
     if parentDir == LEFT and childDir == RIGHT:
         return True
     if parentDir == DOWN and childDir == UP:
@@ -583,7 +538,8 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 
 # ----- Program ------------------------------------------------------------------------
 li()
-readMap('CompetitionMap')
+start1 = timer()
+readMap('aMap')
 #readMap("testMap12")
 #readMap("testMap11")   # Read the competition map
 print("\n")
@@ -595,15 +551,10 @@ print('sokobanMap')
 visualizeMap2(sokobanMap)
 # For manual input:
 sokobanMap,manCoord = copyCleanMap(sokobanMap)
-#BoxList = []
-#BoxList = [[2,2],[2,3]]
-#GoalList = []
-#GoalList = [[2,1],[2,3]]
-#manCoord = []
-#manCoord = [1,1]
+
 countGoals = len(BoxOnGoal)
             
-li()   # todo : fix initMap
+li()  
 print('initMap')
 visualizeMap2(initMap)
 print('sokobanMap')
@@ -622,14 +573,12 @@ li()
 print('check noBoxList')
 noBoxList = makeNoBoxList(sokobanMap)
 
-#noBoxList+=[[6,1],[7,1],[8,1],[9,1],[10,2]]
-
 
 print(noBoxList)
 
 li()
 print('test of first node in tree')
-#rootBoxList = BoxList.copy()
+
 root = Node(getNameForNode(),'init',manCoord,BoxList,countGoals)
 print('root name: ',root.getName())
 tempListStateRoot = [root.coord]+BoxList
@@ -648,29 +597,13 @@ mytree = Tree()
 
 mytree = root
 Openlist.append(root)
-#
-#li()
-#print('test the tree structure')
-#print(root.isLeaf())
-
-#print(isIllegalMove(root.coord,LEFT))
-
-#print('open list ', Openlist)
-
-#root.createChildren()
-
-#print('length of open list', len(Openlist))
-
-#for i in Openlist:
-#    print(i.coord)
-  
-#print(hashTable)
 
 
 li()
 print('begin solving')
 print('Name of the first element on Openlist: ', Openlist[0].name)
-start = timer()
+stop1 = timer()
+start2 = timer()
 counterForCounts = 0
 while len(Openlist):
     counterForCounts += 1
@@ -699,4 +632,6 @@ li()
 
 print('output string - number of moves:',len(resultString),'  ' , resultString[::-1])
 li()
-print('Time elapsed in seconds: ', end - start) # Time in seconds, e.g. 5.38091952400282
+print('Time elapsed in seconds: ', end - start1) # Time in seconds, e.g. 5.38091952400282
+print('Time spent preprocessing: ',stop1- start1 )
+print('Time spent solving the resulting map', end- start2)

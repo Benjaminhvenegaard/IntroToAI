@@ -539,7 +539,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 # ----- Program ------------------------------------------------------------------------
 li()
 start1 = timer()
-readMap('aMap')
+readMap('PushBoxProfessional316')
 #readMap("testMap12")
 #readMap("testMap11")   # Read the competition map
 print("\n")

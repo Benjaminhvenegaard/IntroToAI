@@ -51,7 +51,6 @@ HORIZONTAL = True
 
 hashTable = {} # Hashtable for holding the sorted positions of boxes
 
-
 # ----- Classes -------------------------------------------------------------------------
 
 class Node:
@@ -174,7 +173,7 @@ class Node:
                     inserted = insertInHashtable(hashTable,temp.name,hashing(tempListState))
                     if inserted:
                         Openlist.append(temp)
-                        #print(tempListState)
+                        
                     if temp.nGoal == len(BoxList):
                         GOALREACHED = True
                         GOALID = temp.name
@@ -189,7 +188,6 @@ class Node:
                     elif i == 3:
                         self.up = DEAD
                 
-
 
 class Tree:
      def __init__(self):
@@ -221,7 +219,6 @@ def insertInHashtable(hashtable, listoflists, key):
         #print('overwrite', listoflists, key)
         return False
 
-
 # ----- Map functions -----------------------------------------------------------------------
 
 def readMap(nameOfFile): #Reads the map and outputs the layout to a list of strings and to the terminal. 
@@ -235,7 +232,6 @@ def readMap(nameOfFile): #Reads the map and outputs the layout to a list of stri
             tempList.append(line[elem])
         initMap.append(tempList)    
         print (line,end = "")
-
 
 
 def visualizeMap(aMap):
@@ -329,6 +325,7 @@ def getNeighbouringWalls(map, coord):
         tempList.append('UP')
     return tempList
 
+
 def checkCorners(map,coord):
     #returns true if the player tries to push a box into a corner in a four connected mannor
     # 4-way check:
@@ -363,12 +360,10 @@ def checkCorners(map,coord):
         return False
 
 
-
 def makeNoBoxList(Map):
     # @ Map         : The game map described in a list of lists, where every element in the inner most list contains is a single character. 
     #                       This character can be either GOAL, FLOOR, WALL or NOTHING 
     # #
-
     # Go through the map and find the corners which can't be put boxes into
     retList =[]
     for x in range(1,len(Map)-1):
@@ -410,7 +405,6 @@ def makeNoBoxList(Map):
                 if len(tempRetList) == distanceBetweenCorners:
                     retList += tempRetList
 
-
     for x in range(0,xMax):
         for y in range(0,yMax):
             tempRetList=[]
@@ -435,57 +429,9 @@ def makeNoBoxList(Map):
                         tempRetList.append([retList[x][0]+i,retList[x][1]])
                 if len(tempRetList) == distanceBetweenCorners:
                     retList += tempRetList    #        #Do the same for vertical lines
-    #for x in retList:
-    #    for y in retList:
-    #        if retList[x][1] == retList[y][1]:
-    #            Walls1 = getNeighbouringWalls(retList[x][1])
-    #            Walls2 = getNeighbouringWalls(retList[y][1])
-    #        # Try to connect the corners 
-    #            for i in range(len(Walls1)):
-    #                if Walls2[i] in Walls1:
-    #                    commonDirection = Walls2[i]
-    #            #If they don't have a goal and share 1 wall
-    #            #Put all points along that line on retList
-    #            for i in range(retList[y][0]-retList[x][0]):
-    #                if commonDirection in getNeighbouringWalls(retList[x][0]+i) and Map[x][0]+i != GOAL:
-    #                    tempRetList.append(retList[x][0]+i)
-    #            if len(tempRetList) == range(retList[y][0]-retList[x][0]):
-    #                retList.append(tempRetList)
-
-
-    # Find vertical walls which do not have any goals
-
-            
-        #    if Map[y][x] is not WALL and Map[y][x] is not NOTHING:
-        #        # If the current coord is not the player
-        #        # If the current coord is a deadlock pos (DEADLOCK = DL)
-        #        nCont = getNeighboursContent(Map, [y,x])
-        #        count = 0
-        #        for i in nCont:
-        #            if i is WALL:
-        #                count += 1
-
-                    
-        #        # If goal append to list - All goal are eligable
-        #        if Map[y][x] is GOAL:
-        #            retList.append([y,x])
-
-        #        else:
-        #            # DL check 1 : endWall with goal
-        #            print(count, y,x)
-        #            if count < 2:
-        #                if y is len(Map)-2 or y is 1:
-        #                    if goalMoveCheck(Map,[y,x], HORIZONTAL):
-        #                        retList.append([y,x])
-
-        #                elif x is len(Map[y])-2 or x is 1: # -1 would be a wall
-        #                    if goalMoveCheck(Map,[y,x], VERTICAL):
-        #                        retList.append([y,x])
-
-        #                else:
-        #                    retList.append([y,x])
-
+   
     return retList
+
 
 # ----- Random functions ----------------------------------------------------------------------
 def li():
@@ -518,7 +464,6 @@ def getNeighboursContent(Map, coord):
     return returnList
 
 
-
 def sortCoord(listoflists): 
     #It will first sort on the y value and if that's equal then it will sort on the x value. 
     #I would also advise to not use list as a variable because it is a built-in data structure.
@@ -530,6 +475,7 @@ def getNameForNode():
     global iterator
     iterator+=1
     return iterator-1
+
 
 def isOppositeMove(parentDir,childDir):
     if parentDir == LEFT and childDir == RIGHT:
@@ -593,14 +539,8 @@ print('initMap')
 visualizeMap2(initMap)
 print('sokobanMap')
 visualizeMap2(sokobanMap)
-# For manual input:
+
 sokobanMap,manCoord = copyCleanMap(sokobanMap)
-#BoxList = []
-#BoxList = [[2,2],[2,3]]
-#GoalList = []
-#GoalList = [[2,1],[2,3]]
-#manCoord = []
-#manCoord = [1,1]
 countGoals = len(BoxOnGoal)
             
 li()   # todo : fix initMap
@@ -617,19 +557,16 @@ print('Man-coordinates: ',manCoord)
 print('Amount of boxes already on goal: ',countGoals)
 
 
-
 li()
 print('check noBoxList')
 noBoxList = makeNoBoxList(sokobanMap)
-
-#noBoxList+=[[6,1],[7,1],[8,1],[9,1],[10,2]]
 
 
 print(noBoxList)
 
 li()
 print('test of first node in tree')
-#rootBoxList = BoxList.copy()
+
 root = Node(getNameForNode(),'init',manCoord,BoxList,countGoals)
 print('root name: ',root.getName())
 tempListStateRoot = [root.coord]+BoxList
@@ -648,23 +585,6 @@ mytree = Tree()
 
 mytree = root
 Openlist.append(root)
-#
-#li()
-#print('test the tree structure')
-#print(root.isLeaf())
-
-#print(isIllegalMove(root.coord,LEFT))
-
-#print('open list ', Openlist)
-
-#root.createChildren()
-
-#print('length of open list', len(Openlist))
-
-#for i in Openlist:
-#    print(i.coord)
-  
-#print(hashTable)
 
 
 li()
@@ -683,17 +603,15 @@ while len(Openlist):
         #while:
         break
     else:
-        if counterForCounts%1000==1:
+        if counterForCounts%10000==1:
             print('Length on Openlist: ',len(Openlist),'  Nodes on Openlist:  ',end='')
             print('Goal not reached')
     Openlist.pop(0)
 end = timer()
-    
-   
+       
 li()
 print('done solving hashTable:')
 print(len(hashTable))
-
 
 li()
 

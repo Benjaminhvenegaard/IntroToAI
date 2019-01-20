@@ -217,7 +217,7 @@ def hashing(listoflist): # Makes the hashvalue for an input list
 
 def insertInHashtable(hashtable, listoflists, key): # Inserts the given list on the key position in a hashtable. The function outputs true or false if the place is vacant or free.
     if not hashtable.get(key):
-        hashtable[key] = listoflists
+        hashtable[key] = True #listoflists
         return True
     else:
         #print('overwrite', listoflists, key)
@@ -453,7 +453,7 @@ def outputListOfMoves(self): # function to make the resulting string from the so
     global resultString
     #resultString += self.direction
     while self.isRoot:
-        print(self.getCoord())
+        #print(self.getCoord())
         resultString += self.direction
         self = self.parent
         if self.direction == 'init':
@@ -550,16 +550,16 @@ print("\n")
 sokobanMap = initMap[:][:]
 print('initMap')
 visualizeMap2(initMap)
-print('sokobanMap')
-visualizeMap2(sokobanMap)
+#print('sokobanMap')
+#visualizeMap2(sokobanMap)
 # For manual input:
 sokobanMap,manCoord = copyCleanMap(sokobanMap)
 
 countGoals = len(BoxOnGoal)
             
 li()  
-print('initMap')
-visualizeMap2(initMap)
+#print('initMap')
+#visualizeMap2(initMap)
 print('sokobanMap')
 visualizeMap2(sokobanMap)
 li()
@@ -576,9 +576,8 @@ print('Amount of boxes already on goal: ',countGoals)
 li()
 print('check noBoxList')
 noBoxList = makeNoBoxList(sokobanMap)
-
-
 print(noBoxList)
+print('Length of noBoxList: ', len(noBoxList))
 
 li()
 print('test of first node in tree')
@@ -620,9 +619,9 @@ while len(Openlist):
         #while:
         break
     else:
-        if counterForCounts%1000==1:
-            print('Length on Openlist: ',len(Openlist),'  Nodes on Openlist:  ',end='')
-            print('Goal not reached')
+        if counterForCounts%10000==1:
+            print('Length on Openlist: ',len(Openlist),'Goal not reached',end='\r')
+          
     Openlist.pop(0)
 end = timer()
     

@@ -2,7 +2,7 @@ print("Begin program")
 
 # ----- Imports ----------------------------------------------------------------------
 from timeit import default_timer as timer
-
+from time import sleep
 import copy
 
 # ----- Variables and lists -----------------------------------------------------------------------
@@ -48,6 +48,8 @@ X = 1                   # Variables which aren't used.
 Y = 0
 VERTICAL = False
 HORIZONTAL = True
+
+tileCounter = 0
 
 hashTable = {} # Hashtable for holding the sorted positions of boxes
 
@@ -368,12 +370,13 @@ def makeNoBoxList(Map):
     # @ Map         : The game map described in a list of lists, where every element in the inner most list contains is a single character. 
     #                       This character can be either GOAL, FLOOR, WALL or NOTHING 
     # #
-
+    global tileCounter
     # Go through the map and find the corners which can't be put boxes into
     retList =[]
     for x in range(1,len(Map)-1):
         for y in range(1,len(Map[x])-1):
             if Map[x][y] != WALL:
+                tileCounter += 1
                 nWallsInNeighbourhood = len(getNeighbouringWalls(Map,[x , y]))
                 if checkCorners(Map,[x , y]) and Map[x][y] != GOAL:
                     retList.append([x,y])
@@ -539,7 +542,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 # ----- Program ------------------------------------------------------------------------
 li()
 start1 = timer()
-readMap('PushBoxProfessional316')
+readMap('CompetitionMap2017')
 #readMap("testMap12")
 #readMap("testMap11")   # Read the competition map
 print("\n")
@@ -566,6 +569,7 @@ print('List of Goals: ',GoalList)
 print('List of Boxes: ',BoxList)
 print('Man-coordinates: ',manCoord)
 print('Amount of boxes already on goal: ',countGoals)
+
 
 
 
@@ -632,6 +636,23 @@ li()
 
 print('output string - number of moves:',len(resultString),'  ' , resultString[::-1])
 li()
-print('Time elapsed in seconds: ', end - start1) # Time in seconds, e.g. 5.38091952400282
-print('Time spent preprocessing: ',stop1- start1 )
-print('Time spent solving the resulting map', end- start2)
+print('Time spent preprocessing:             ', stop1- start1 )
+print('Time spent solving the resulting map: ', end- start2)
+print('Time elapsed in seconds:              ', end - start1) # Time in seconds, e.g. 5.38091952400282
+print('Size of map: ', len(sokobanMap[0]) ,' x ',len(sokobanMap) )
+print('Amount of boxes: ', len(GoalList))
+print('Total amount of tiles:       ', tileCounter)
+print('Amount of tiles sorted away: ', len(noBoxList))
+
+sleep(30)
+print('done')
+
+
+
+
+
+# TODO
+
+# Make the algorithm able to acknowledge if the player starts on a goal
+
+# Make two heuristics to the algorithm. if a state decreases the manhattan distance and if nGoals is incremented

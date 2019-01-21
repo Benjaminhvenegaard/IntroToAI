@@ -211,7 +211,7 @@ def hashing(listoflist): # Makes the hashvalue for an input list
     hashval = 0
     for i in listoflist:
         for j in i:
-            hashval = hashval * 191 + j
+            hashval = hashval * 13 + j
 
     return hashval
 
@@ -542,7 +542,7 @@ def isIllegalMove(coord, dir, boxList): # Returns two variables: first being ill
 # ----- Program ------------------------------------------------------------------------
 li()
 start1 = timer()
-readMap('CompetitionMap2017')
+readMap('ownMap')
 #readMap("testMap12")
 #readMap("testMap11")   # Read the competition map
 print("\n")
